@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="board">
+
+	<select id="getList" parameterType="map" resultType="boardvo">
+		<choose>
+			<when test="keyword !=null or keyword !=''">
+ 	<![CDATA[
+ 	select a.no, title, a.contents, write_date, hit, g_no, o_no, dept, user_no, b.name 
+		from  board a , user b
+		where a.user_no=b.no  
+		and a.g_no IN(select g_no from board where title like '%${keyword}%' or contents like '%${keyword}%' )
+		order by g_no desc, o_no asc limit 10 offset #{currentPage}
+ 	]]>
+			</when>
+			<otherwise>
+ 	<![CDATA[
+ 	select a.no, title, a.contents, write_date, hit, g_no, o_no, dept, user_no, b.name 
+		from board a , user b
+		where a.user_no=b.no order by g_no desc, o_no asc limit 10 offset #{currentPage}
+ 	
+ 	
+					]]>
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="getCount" parameterType="string"
+		resultType="_int">
+<choose>
+			<when test="_parameter !=null or _parameter !=''">
+ 	<![CDATA[
+ 	select distinct count(*) from board where g_no IN(select a.g_no from board a where a.title like '%${_parameter}%' or a.contents like '%${_parameter}%')]]>
+			</when>
+			<otherwise>
+ 	<![CDATA[
+ 	select distinct count(*) from board]]>
+			</otherwise>
+		</choose>
+
+	</select>
+	
+	<delete id="delete" parameterType="_long">
+  <![CDATA[
+ 	delete from board where no=#{no}
+ 	]]>
+	</delete>
+	<select id="getVo" parameterType="_long" resultType="boardvo">
+  <![CDATA[
+ 	select * from board where no=#{no}
+ 	]]>
+	</select>
+	<update id="upHit" parameterType="_long">
+   <![CDATA[
+ 	update board
+	 set hit = hit + 1
+	where no=#{no}
+		]]>
+	</update>
+	<update id="modify" parameterType="boardvo">
+   <![CDATA[
+ update board
+	set title=#{title}, contents=#{contents}
+	        where no=#{no}
+	        	]]>
+	</update>
+	<insert id="insert" parameterType="boardvo">
+ <![CDATA[
+ insert into board values 
+	    (null, #{title}, #{contents} , now(), 0, ifnull((select max(g_no)+1 from board a),1), 1, 0, #{user_no})
+	    ]]>
+	</insert>
+	<update id="udpateOno" parameterType="boardvo">
+ <![CDATA[
+  update board set o_no = o_no+1 where g_no=#{g_no} and o_no> #{o_no}
+  ]]>
+	</update>
+	<insert id="insertReboard" parameterType="boardvo">
+ <![CDATA[
+ insert into board values 
+	         		(null, #{title}, #{contents} , now(), 0, #{g_no}, #{o_no}, #{dept}, #{user_no})
+ ]]>
+	</insert>
+</mapper>
